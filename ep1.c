@@ -299,9 +299,32 @@ void create_threads()
 
 void* pilot_run(void* argument)
 {
-	Pilot* pilot = (Pilot*) argument;
+	Pilot* pilot;
+	int index; 
+	Segment current, next;
+	int N = 10;
+	
+	pilot = (Pilot*) argument;
 	while (!start);
 	printf("[Piloto %d iniciou a corrida]\n", pilot->id);
+	while (--N > 0) {
+		index = pilot->segment->index;
+		sem_wait(&track_sems[(index + 1) % TRACK_SEGMENTS]);	
+		next = track[(index + 1) % TRACK_SEGMENTS];
+		if (next.p1 == NULL) 
+			next.p1 = pilot;
+		else if (next.p2 == NULL)
+			next.p2 = pilot;
+		pilot->segment = &next;
+		current = track[index];
+		if (current.p1 == pilot)
+			current.p1 = NULL;
+		else if (current.p2 == pilot)
+			current.p2 = NULL;
+		sem_post(&track_sems[index]);
+	}
+	printf("[Piloto %d finalizou a corrida no índice %d]\n", pilot->id, pilot->segment->index);
+
 	return NULL; 
 }
 
@@ -350,6 +373,7 @@ int main(int argc, char** argv)
 	start = 1;
 
 	join_threads();
+
 	clean_up();
 	
 	return EXIT_SUCCESS;
