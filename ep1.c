@@ -67,10 +67,11 @@ Pilot* pilots;
 /* Definição de uma estrutura segmento de pista. */
 struct segment
 {
-	int start;      /* distância do começo do segmento em metros */
-	int is_double;  /* identifica se o segmento tem duas faixas */
-	Pilot* p1;      /* piloto na primeira faixa */
-	Pilot* p2;      /* piloto na segunda faixa, se houver */
+	int index;     /* índice identificador do segmento */
+	int position;  /* posição do começo do segmento em metros */
+	int is_double; /* identifica se o segmento tem duas faixas */
+	Pilot* p1;     /* piloto na primeira faixa */
+	Pilot* p2;     /* piloto na segunda faixa, se houver */
 };
 
 /* A pista será representada por um vetor de TRACK_SEGMENTS segmentos. */
@@ -124,7 +125,8 @@ void setup_track()
 	int i;
 
 	for (i = 0; i < TRACK_SEGMENTS; i++) {
-		track[i].start = i * SEGMENTS_DISTANCE;
+		track[i].index = i;
+		track[i].position = i * SEGMENTS_DISTANCE;
 		track[i].is_double = 0;
 		track[i].p1 = track[i].p2 = NULL;
 	}
@@ -137,7 +139,8 @@ void setup_boxes()
 	int i;
 
 	for (i = 0; i < BOXES_SEGMENTS; i++) {
-		boxes[i].start = i * SEGMENTS_DISTANCE;
+		boxes[i].index = i;
+		boxes[i].position = i * SEGMENTS_DISTANCE;
 		boxes[i].is_double = 0;
 		boxes[i].p1 = track[i].p2 = NULL;
 	}
@@ -211,16 +214,16 @@ void create_boxes_semaphores()
 
 void setup_start_grid()
 {
-	int i, j, pos;
+	int i, j, index;
 
 	for (i = j = 0; i < m; i++, j += 2) {
-		pos = TRACK_SEGMENTS - 1 - i;
-		track[pos].p1 = &pilots[j];
-		track[pos].p2 = &pilots[j + 1];
-		pilots[j].segment = &track[pos];
-		pilots[j + 1].segment = &track[pos];
-		sem_wait(&track_sems[pos]);
-		sem_wait(&track_sems[pos]);
+		index = TRACK_SEGMENTS - 1 - i;
+		track[index].p1 = &pilots[j];
+		track[index].p2 = &pilots[j + 1];
+		pilots[j].segment = &track[index];
+		pilots[j + 1].segment = &track[index];
+		sem_wait(&track_sems[index]);
+		sem_wait(&track_sems[index]);
 	}
 }
 
@@ -235,7 +238,7 @@ void show_pilots()
 	printf("Id\tEquipe\tPosição\n");
 	printf("------------------------\n");
 	for (i = 0; i < 2 * m; i++)
-		printf("%d\t%d\t%d\n", pilots[i].id, pilots[i].team, pilots[i].segment->start);
+		printf("%d\t%d\t%d\n", pilots[i].id, pilots[i].team, pilots[i].segment->position);
 }
 
 /**************************************************************************************************/
@@ -245,16 +248,16 @@ void show_track()
 	int i, p1, p2; char d;
 	Segment s;
 
-	printf("------------------------------------\n");
+	printf("-------------------------------------\n");
 	printf("PISTA\n");
-	printf("Posição\tComeço\tDuplo\tP_1\tP_2\n");
-	printf("------------------------------------\n");
+	printf("Índice\tPosição\tDuplo\tP_1\tP_2\n");
+	printf("-------------------------------------\n");
 	for (i = 0; i < TRACK_SEGMENTS; i++) {
 		s = track[i];
 		d = s.is_double ? 'S' : 'N';
 		p1 = s.p1 ? s.p1->id : 0;
 		p2 = s.p2 ? s.p2->id : 0;
-		printf("%d\t%d\t%c\t%d\t%d\n", i, s.start, d, p1, p2);
+		printf("%d\t%d\t%c\t%d\t%d\n", s.index, s.position, d, p1, p2);
 	}
 }
 
@@ -267,14 +270,14 @@ void show_boxes()
 
 	printf("------------------------------------\n");
 	printf("BOXES\n");
-	printf("Posição\tComeço\tDuplo\tP_1\tP_2\n");
+	printf("Índice\tPosição\tDuplo\tP_1\tP_2\n");
 	printf("------------------------------------\n");
 	for (i = 0; i < BOXES_SEGMENTS; i++) {
 		s = boxes[i];
 		d = s.is_double ? 'S' : 'N';
 		p1 = s.p1 ? s.p1->id : 0;
 		p2 = s.p2 ? s.p2->id : 0;
-		printf("%d\t%d\t%c\t%d\t%d\n", i, s.start, d, p1, p2);
+		printf("%d\t%d\t%c\t%d\t%d\n", s.index, s.position, d, p1, p2);
 	}
 }
 
