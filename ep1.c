@@ -50,15 +50,15 @@
 #define SHOW_REPORT_INTERVAL 15
 
 /* Definição dos tipos para piloto e segmento de pista. */
-typedef struct pilot Pilot;
-typedef struct segment Segment;
+typedef struct pilot* Pilot;
+typedef struct segment* Segment;
 
 /* Definição de uma estrutura piloto. */
 struct pilot
 {
 	int id;   /* identificador do piloto */
 	int team; /* identificador da equipe */
-	Segment* segment; /* identifica em qual segmento da pista o piloto está */
+	Segment segment; /* identifica em qual segmento da pista o piloto está */
 };
 
 /* Coleção de pilotos da competição. */
@@ -70,8 +70,8 @@ struct segment
 	int index;     /* índice identificador do segmento */
 	int position;  /* posição do começo do segmento em metros */
 	int is_double; /* identifica se o segmento tem duas faixas */
-	Pilot* p1;     /* piloto na primeira faixa */
-	Pilot* p2;     /* piloto na segunda faixa, se houver */
+	Pilot p1;      /* piloto na primeira faixa */
+	Pilot p2;      /* piloto na segunda faixa, se houver */
 };
 
 /* A pista será representada por um vetor de TRACK_SEGMENTS segmentos. */
@@ -125,10 +125,11 @@ void setup_track()
 	int i;
 
 	for (i = 0; i < TRACK_SEGMENTS; i++) {
-		track[i].index = i;
-		track[i].position = i * SEGMENTS_DISTANCE;
-		track[i].is_double = 0;
-		track[i].p1 = track[i].p2 = NULL;
+		track[i] = malloc(sizeof(*track[i]));
+		track[i]->index = i;
+		track[i]->position = i * SEGMENTS_DISTANCE;
+		track[i]->is_double = 0;
+		track[i]->p1 = track[i]->p2 = NULL;
 	}
 }
 
@@ -139,10 +140,11 @@ void setup_boxes()
 	int i;
 
 	for (i = 0; i < BOXES_SEGMENTS; i++) {
-		boxes[i].index = i;
-		boxes[i].position = i * SEGMENTS_DISTANCE;
-		boxes[i].is_double = 0;
-		boxes[i].p1 = track[i].p2 = NULL;
+		boxes[i] = malloc(sizeof(*boxes[i]));
+		boxes[i]->index = i;
+		boxes[i]->position = i * SEGMENTS_DISTANCE;
+		boxes[i]->is_double = 0;
+		boxes[i]->p1 = track[i]->p2 = NULL;
 	}
 }
 
@@ -164,7 +166,7 @@ int read_input_file(const char* file)
 	while (fscanf(fd, "%d", &begin) >= 0) {
 		fscanf(fd, "%d", &end);
 		for (i = begin; i <= end; i++)
-			track[i].is_double = 1;
+			track[i]->is_double = 1;
 	}
 	fclose(fd);
 	
@@ -179,9 +181,10 @@ void setup_pilots()
 
 	pilots = malloc(2 * m * sizeof(Pilot));
 	for (i = 0; i < 2 * m; i++) {
-		pilots[i].id = i + 1;
-		pilots[i].team = 1 + (i / 2);  
-		pilots[i].segment = NULL;
+		pilots[i] = malloc(sizeof(*pilots[i]));
+		pilots[i]->id = i + 1;
+		pilots[i]->team = 1 + (i / 2);  
+		pilots[i]->segment = NULL;
 	}
 }
 
@@ -193,7 +196,7 @@ void create_track_semaphores()
 
 	track_sems = malloc(TRACK_SEGMENTS * sizeof(sem_t));
 	for (i = 0; i < TRACK_SEGMENTS; i++)
-		if (track[i].is_double)
+		if (track[i]->is_double)
 			sem_init(&track_sems[i], SHARED, 2);
 		else
 			sem_init(&track_sems[i], SHARED, 1);
@@ -218,10 +221,10 @@ void setup_start_grid()
 
 	for (i = j = 0; i < m; i++, j += 2) {
 		index = TRACK_SEGMENTS - 1 - i;
-		track[index].p1 = &pilots[j];
-		track[index].p2 = &pilots[j + 1];
-		pilots[j].segment = &track[index];
-		pilots[j + 1].segment = &track[index];
+		track[index]->p1 = pilots[j];
+		track[index]->p2 = pilots[j + 1];
+		pilots[j]->segment = track[index];
+		pilots[j + 1]->segment = track[index];
 		sem_wait(&track_sems[index]);
 		sem_wait(&track_sems[index]);
 	}
@@ -232,13 +235,16 @@ void setup_start_grid()
 void show_pilots()
 {
 	int i;
+	Segment s;
 
-	printf("------------------------\n");
+	printf("--------------------------------\n");
 	printf("PILOTOS\n");
-	printf("Id\tEquipe\tPosição\n");
-	printf("------------------------\n");
-	for (i = 0; i < 2 * m; i++)
-		printf("%d\t%d\t%d\n", pilots[i].id, pilots[i].team, pilots[i].segment->position);
+	printf("Id\tEquipe\tPosição\tÍndice\n");
+	printf("--------------------------------\n");
+	for (i = 0; i < 2 * m; i++) {
+		s = pilots[i]->segment;
+		printf("%d\t%d\t%d\t%d\n", pilots[i]->id, pilots[i]->team, s->position, s->index);
+	}
 }
 
 /**************************************************************************************************/
@@ -254,10 +260,10 @@ void show_track()
 	printf("-------------------------------------\n");
 	for (i = 0; i < TRACK_SEGMENTS; i++) {
 		s = track[i];
-		d = s.is_double ? 'S' : 'N';
-		p1 = s.p1 ? s.p1->id : 0;
-		p2 = s.p2 ? s.p2->id : 0;
-		printf("%d\t%d\t%c\t%d\t%d\n", s.index, s.position, d, p1, p2);
+		d = s->is_double ? 'S' : 'N';
+		p1 = s->p1 ? s->p1->id : 0;
+		p2 = s->p2 ? s->p2->id : 0;
+		printf("%d\t%d\t%c\t%d\t%d\n", s->index, s->position, d, p1, p2);
 	}
 }
 
@@ -274,10 +280,10 @@ void show_boxes()
 	printf("------------------------------------\n");
 	for (i = 0; i < BOXES_SEGMENTS; i++) {
 		s = boxes[i];
-		d = s.is_double ? 'S' : 'N';
-		p1 = s.p1 ? s.p1->id : 0;
-		p2 = s.p2 ? s.p2->id : 0;
-		printf("%d\t%d\t%c\t%d\t%d\n", s.index, s.position, d, p1, p2);
+		d = s->is_double ? 'S' : 'N';
+		p1 = s->p1 ? s->p1->id : 0;
+		p2 = s->p2 ? s->p2->id : 0;
+		printf("%d\t%d\t%c\t%d\t%d\n", s->index, s->position, d, p1, p2);
 	}
 }
 
@@ -287,7 +293,7 @@ void create_threads()
 {
 	pthread_attr_t attr;
 	int i;
-
+	
 	pthread_attr_init(&attr);
 	pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
 	pids = malloc(2 * m * sizeof(pthread_t));
@@ -299,29 +305,31 @@ void create_threads()
 
 void* pilot_run(void* argument)
 {
-	Pilot* pilot;
-	int index; 
+	Pilot pilot;
 	Segment current, next;
-	int N = 10;
+	int index, next_index; 
+	int N = 11;
 	
-	pilot = (Pilot*) argument;
+	pilot = *((Pilot*) argument);
 	while (!start);
 	printf("[Piloto %d iniciou a corrida]\n", pilot->id);
-	while (--N > 0) {
+	while (N-- > 0) {
 		index = pilot->segment->index;
-		sem_wait(&track_sems[(index + 1) % TRACK_SEGMENTS]);	
-		next = track[(index + 1) % TRACK_SEGMENTS];
-		if (next.p1 == NULL) 
-			next.p1 = pilot;
-		else if (next.p2 == NULL)
-			next.p2 = pilot;
-		pilot->segment = &next;
+		next_index = (index + 1) % TRACK_SEGMENTS;
+		sem_wait(&track_sems[next_index]);	
+		next = track[next_index];
+		pilot->segment = next;
+		if (next->p1 == NULL) 
+			next->p1 = pilot;
+		else if (next->p2 == NULL)
+			next->p2 = pilot;
 		current = track[index];
-		if (current.p1 == pilot)
-			current.p1 = NULL;
-		else if (current.p2 == pilot)
-			current.p2 = NULL;
+		if (current->p1 == pilot)
+			current->p1 = NULL;
+		else if (current->p2 == pilot)
+			current->p2 = NULL;
 		sem_post(&track_sems[index]);
+		printf("[Piloto %d fez %d -> %d]\n", pilot->id, index, next_index);
 	}
 	printf("[Piloto %d finalizou a corrida no índice %d]\n", pilot->id, pilot->segment->index);
 
@@ -342,9 +350,30 @@ void join_threads()
 
 void clean_up()
 {
-	if (pilots) free(pilots);
-	if (track_sems) free(track_sems);
-	if (boxes_sems) free(boxes_sems);
+	int i;
+
+	for (i = 0; i < TRACK_SEGMENTS; i++)
+		if (track[i])
+			free(track[i]);
+
+	for (i = 0; i < BOXES_SEGMENTS; i++)
+		if (boxes[i]) 
+			free(boxes[i]);
+	
+
+	if (pilots) {
+		for (i = 0; i < 2*m; i++)
+			if (pilots[i])
+				free(pilots[i]);
+		free(pilots);
+	}
+
+	if (track_sems) 
+		free(track_sems);
+	
+	if (boxes_sems) 
+		free(boxes_sems);
+	
 	if (pids) free(pids);
 }
 
@@ -373,7 +402,8 @@ int main(int argc, char** argv)
 	start = 1;
 
 	join_threads();
-
+	show_track();
+	show_pilots();
 	clean_up();
 	
 	return EXIT_SUCCESS;
