@@ -98,6 +98,13 @@ sem_t* boxes_sems;
 /* Vetor de threads, uma para cada corredor. */
 pthread_t* pids;
 
+/* Vetores de semaforos utilizados para implementar a barreira de sincronização. */
+sem_t* arrive;
+sem_t* go_on;
+
+/* Thread coordenadora para a barreira de sincronização. */
+pthread_t coordinator;
+
 /* Define o começo da corrida. */
 int start = 0;
 
@@ -105,17 +112,29 @@ int start = 0;
 
 void setup_track();
 void setup_boxes();
+
 int read_input_file(const char* file);
+
 void setup_pilots();
+
 void create_track_semaphores();
 void create_boxes_semaphores();
+
 void setup_start_grid();
+
 void show_pilots();
 void show_track();
 void show_boxes();
-void create_threads();
+
+void create_barrier_semaphores();
+void create_coordinator_thread();
+void* barrier_sync(void* argument);
+
+void create_pilots_threads();
 void* pilot_run(void* argument);
+
 void join_threads();
+
 void clean_up();
 
 /**************************************************************************************************/
@@ -251,7 +270,8 @@ void show_pilots()
 
 void show_track()
 {
-	int i, p1, p2; char d;
+	int i; 
+	char d, buff1[4], buff2[4];
 	Segment s;
 
 	printf("-------------------------------------\n");
@@ -261,9 +281,18 @@ void show_track()
 	for (i = 0; i < TRACK_SEGMENTS; i++) {
 		s = track[i];
 		d = s->is_double ? 'S' : 'N';
-		p1 = s->p1 ? s->p1->id : 0;
-		p2 = s->p2 ? s->p2->id : 0;
-		printf("%d\t%d\t%c\t%d\t%d\n", s->index, s->position, d, p1, p2);
+
+		if (s->p1)
+			sprintf(buff1, "%d", s->p1->id);
+		else
+			sprintf(buff1, "-");
+
+		if (s->p2)
+			sprintf(buff2, "%d", s->p2->id);
+		else
+			sprintf(buff2, "-");
+
+		printf("%d\t%d\t%c\t%s\t%s\n", s->index, s->position, d, buff1, buff2);
 	}
 }
 
@@ -289,7 +318,46 @@ void show_boxes()
 
 /**************************************************************************************************/
 
-void create_threads()
+void create_barrier_semaphores()
+{
+	int i;
+
+	arrive = malloc(2 * m * sizeof(sem_t));
+	go_on = malloc(2 * m * sizeof(sem_t));
+	for (i = 0; i < 2 * m; i++) {
+		sem_init(&arrive[i], SHARED, 0);
+		sem_init(&go_on[i], SHARED, 0);
+	}
+}
+
+/**************************************************************************************************/
+
+void create_coordinator_thread()
+{
+	pthread_attr_t attr;
+	
+	pthread_attr_init(&attr);
+	pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
+	pthread_create(&coordinator, &attr, barrier_sync, NULL);
+}
+
+/**************************************************************************************************/
+
+void* barrier_sync(void* argument)
+{
+	int i, num_pilots = 2 * m;
+
+	while (1) {
+		for (i = 0; i < num_pilots; i++)
+			sem_wait(&arrive[i]);
+		for (i = 0; i < num_pilots; i++)
+			sem_post(&go_on[i]);		
+	}
+}
+
+/**************************************************************************************************/
+
+void create_pilots_threads()
 {
 	pthread_attr_t attr;
 	int i;
@@ -307,16 +375,22 @@ void* pilot_run(void* argument)
 {
 	Pilot pilot;
 	Segment current, next;
-	int index, next_index; 
+	int index, next_index;
+	int lap = 0;
+  int fuel = 1 + (n + 1)/2; 
 	int N = 11;
 	
 	pilot = *((Pilot*) argument);
 	while (!start);
-	printf("[Piloto %d iniciou a corrida]\n", pilot->id);
+	/* printf("[Piloto %d iniciou a corrida]\n", pilot->id); */
 	while (N-- > 0) {
-		index = pilot->segment->index;
+    index = pilot->segment->index;
 		next_index = (index + 1) % TRACK_SEGMENTS;
 		sem_wait(&track_sems[next_index]);	
+    if (next_index == 0) {
+      lap++;
+			fuel--;    		
+		}
 		next = track[next_index];
 		pilot->segment = next;
 		if (next->p1 == NULL) 
@@ -330,8 +404,13 @@ void* pilot_run(void* argument)
 			current->p2 = NULL;
 		sem_post(&track_sems[index]);
 		printf("[Piloto %d fez %d -> %d]\n", pilot->id, index, next_index);
+		/* Barreira de sincronizção */
+		sem_post(&arrive[pilot->id - 1]);
+		sem_wait(&go_on[pilot->id - 1]);		
 	}
 	printf("[Piloto %d finalizou a corrida no índice %d]\n", pilot->id, pilot->segment->index);
+	
+	sem_post(&track_sems[pilot->segment->index]);
 
 	return NULL; 
 }
@@ -344,6 +423,9 @@ void join_threads()
 
 	for (i = 0; i < 2 * m; i++)
 		pthread_join(pids[i], NULL);
+
+	printf("[Cancelando thread coordenadora.]\n");
+	pthread_cancel(coordinator);
 }
 
 /**************************************************************************************************/
@@ -360,7 +442,6 @@ void clean_up()
 		if (boxes[i]) 
 			free(boxes[i]);
 	
-
 	if (pilots) {
 		for (i = 0; i < 2*m; i++)
 			if (pilots[i])
@@ -373,8 +454,15 @@ void clean_up()
 	
 	if (boxes_sems) 
 		free(boxes_sems);
+
+	if (arrive)
+		free(arrive);
 	
-	if (pids) free(pids);
+	if (go_on)
+		free(go_on);
+	
+	if (pids) 
+		free(pids);
 }
 
 /**************************************************************************************************/
@@ -396,14 +484,20 @@ int main(int argc, char** argv)
 		show_track();
 		show_boxes();
 	}
-	create_threads();
+
+	create_barrier_semaphores();
+	create_coordinator_thread();
+
+	create_pilots_threads();
 
 	printf("[Foi dada a largada]\n");
 	start = 1;
 
 	join_threads();
+	
 	show_track();
 	show_pilots();
+
 	clean_up();
 	
 	return EXIT_SUCCESS;
