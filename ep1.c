@@ -6,7 +6,7 @@
  * 
  * Arquivo: ep1.c
  * Compilação: gcc ep1.c -o ep1 -lpthread
- * Última atualização: 21/04/2014
+ * Última atualização: 07/04/2014
  **************************************************************************************************/
 
 #include <stdio.h>
