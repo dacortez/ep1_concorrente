@@ -56,9 +56,11 @@ typedef struct segment* Segment;
 /* Definição de uma estrutura piloto. */
 struct pilot
 {
-	int id;   /* identificador do piloto */
-	int team; /* identificador da equipe */
+	int id;          /* identificador do piloto */
+	int team;        /* identificador da equipe */
 	Segment segment; /* identifica em qual segmento da pista o piloto está */
+	int lap;         /* número da volta em que o piloto está */
+	int fuel;        /* combustível disponível */
 };
 
 /* Coleção de pilotos da competição. */
@@ -111,12 +113,11 @@ int start = 0;
 /**************************************************************************************************/
 
 void setup_track();
-void create_track_mutexes();
-
 void setup_boxes();
-void create_boxes_mutexes();
 
 int read_input_file(const char* file);
+void create_track_mutexes();
+void create_boxes_mutexes();
 void setup_pilots();
 void setup_start_grid();
 
@@ -127,6 +128,9 @@ void show_boxes();
 void create_barrier_semaphores();
 void create_coordinator_thread();
 void* barrier_sync(void* argument);
+void show_pilots_report(double time);
+int first_completed_lap();
+void show_first_three_pilots();
 
 void create_pilots_threads();
 void* pilot_run(void* argument);
@@ -152,20 +156,6 @@ void setup_track()
 
 /**************************************************************************************************/
 
-void create_track_mutexes()
-{
-	int i;
-
-	track_mutex = malloc(TRACK_SEGMENTS * sizeof(sem_t));
-	for (i = 0; i < TRACK_SEGMENTS; i++)
-		if (track[i]->is_double)
-			sem_init(&track_mutex[i], SHARED, 2);
-		else
-			sem_init(&track_mutex[i], SHARED, 1);
-}
-
-/**************************************************************************************************/
-
 void setup_boxes()
 {
 	int i;
@@ -177,17 +167,6 @@ void setup_boxes()
 		boxes[i]->is_double = 0;
 		boxes[i]->p1 = track[i]->p2 = NULL;
 	}
-}
-
-/**************************************************************************************************/
-
-void create_boxes_mutexes()
-{
-	int i;
-
-	boxes_mutex = malloc(BOXES_SEGMENTS * sizeof(sem_t));
-	for (i = 0; i < BOXES_SEGMENTS; i++)
-		sem_init(&boxes_mutex[i], SHARED, 1);
 }
 
 /**************************************************************************************************/
@@ -217,6 +196,31 @@ int read_input_file(const char* file)
 
 /**************************************************************************************************/
 
+void create_track_mutexes()
+{
+	int i;
+
+	track_mutex = malloc(TRACK_SEGMENTS * sizeof(sem_t));
+	for (i = 0; i < TRACK_SEGMENTS; i++)
+		if (track[i]->is_double)
+			sem_init(&track_mutex[i], SHARED, 2);
+		else
+			sem_init(&track_mutex[i], SHARED, 1);
+}
+
+/**************************************************************************************************/
+
+void create_boxes_mutexes()
+{
+	int i;
+
+	boxes_mutex = malloc(BOXES_SEGMENTS * sizeof(sem_t));
+	for (i = 0; i < BOXES_SEGMENTS; i++)
+		sem_init(&boxes_mutex[i], SHARED, 1);
+}
+
+/**************************************************************************************************/
+
 void setup_pilots()
 {
 	int i;
@@ -227,6 +231,8 @@ void setup_pilots()
 		pilots[i]->id = i + 1;
 		pilots[i]->team = 1 + (i / 2);  
 		pilots[i]->segment = NULL;
+		pilots[i]->lap = 0;
+		pilots[i]->fuel = 1 + (n + 1) / 2;
 	}
 }
 
@@ -242,6 +248,8 @@ void setup_start_grid()
 		track[index]->p2 = pilots[j + 1];
 		pilots[j]->segment = track[index];
 		pilots[j + 1]->segment = track[index];
+		/* sem_wait(&track_mutex[index]); */
+		/* sem_wait(&track_mutex[index]); */
 	}
 }
 
@@ -341,15 +349,83 @@ void create_coordinator_thread()
 
 void* barrier_sync(void* argument)
 {
-	int i, num_pilots = 2 * m;
+	int i, count = 0, num_pilots = 2 * m;
+	int show_report = (int) (SHOW_REPORT_INTERVAL * 60.0) / (RATE / 1000.0); 	
+	int all_finished = 1;
 
 	while (1) {
+		all_finished = 1;
 		for (i = 0; i < num_pilots; i++)
-			sem_wait(&arrive[i]);
+			if (pilots[i]->lap <= n) {
+				all_finished = 0;				
+				sem_wait(&arrive[i]);
+			}
+		/* Neste ponto todos os pilotos completaram a iteração */
+    /* e estão esperando para continuar. Podemos imprimir  */
+    /* os relatórios necessários pois não haverá mudança   */ 
+    /* nas posições.                                       */ 
+		if (++count % show_report == 0)	
+				show_pilots_report(count * RATE / (1000.0 * 60.0));
+		if (first_completed_lap())		
+			show_first_three_pilots();		
 		for (i = 0; i < num_pilots; i++)
-			sem_post(&go_on[i]);		
+			sem_post(&go_on[i]);	
+		if (all_finished) {
+			return NULL;		
+		}	
 	}
 }
+
+/**************************************************************************************************/
+
+void show_pilots_report(double time)
+{
+	int i;
+	Segment s;
+
+	printf("------------------------------------------\n");
+	printf("RELATÓRIO DOS PILOTOS\n");
+	printf("TEMPO = %3.1f\n", time);
+	printf("Id\tEquipe\tVolta\tPosição\tÍndice\n");
+	printf("------------------------------------------\n");
+	for (i = 0; i < 2 * m; i++) {
+		s = pilots[i]->segment;
+		printf("%d\t%d\t%d\t%d\t%d\n", pilots[i]->id, pilots[i]->team, pilots[i]->lap, s->position, s->index);
+	}
+}		
+
+/**************************************************************************************************/
+
+int first_completed_lap()
+{
+	int i, lap = 0;
+
+	if (track[0]->p1) {
+		lap = track[0]->p1->lap; 	
+	}
+	else if (track[0]->p2) {
+		lap = track[0]->p2->lap; 	
+	}	
+
+	if (lap) {
+		for (i = 1; i < TRACK_SEGMENTS; i++) {
+			if (track[i]->p1 && track[i]->p1->lap >= lap)
+				return 0;		
+			if (track[i]->p2 && track[i]->p2->lap >= lap)
+				return 0;		
+		}
+		return 1;	
+	}
+
+	return 0;
+}		
+
+/**************************************************************************************************/
+
+void show_first_three_pilots()
+{
+	printf("[TRES PRIMEIROS]\n");
+}		
 
 /**************************************************************************************************/
 
@@ -372,82 +448,95 @@ void* pilot_run(void* argument)
 	Pilot pilot = *((Pilot*) argument);
 	int current_index, next_index;
 	Segment current, next;	
-	int lap = 0, fuel = 1 + (n + 1)/2, N = 11;
-	
 	
 	while (!start);
-	/* printf("[Piloto %d iniciou a corrida]\n", pilot->id); */
-
-	/*
-	if (next_index == 0) {
-  	lap++;
-		fuel--;    		
-	}
-	*/
-
-	while (N-- > 0) {
+	
+	while (pilot->lap <= n) {
 		current_index = pilot->segment->index;
 		next_index = (current_index + 1) % TRACK_SEGMENTS;
+		/* Tenta entrar na próxima posição */		
 		sem_wait(&track_mutex[next_index]);	
 		{	
-			current = track[current_index];	    
 			next = track[next_index];
 			if (next->is_double) {
 				if (next->p1 == NULL) {
-					next->p1 = pilot;				
-					pilot->segment = next; 
-					sem_wait(&track_mutex[current_index]); 
-					{
+					next->p1 = pilot;
+					pilot->segment = next;
+					if (next_index == 0)
+  					(pilot->lap)++;    	
+					/* Libera posição atual */		
+					sem_wait(&track_mutex[current_index]);
+					{	
+						current = track[current_index];	    			
 						if (current->p1 == pilot) {
 							current->p1 = NULL;
-						}
+						}	
 						else if (current->p2 == pilot) {
 							current->p2 = NULL;
 						}
-						printf("[Piloto %d fez %d -> %d]\n", pilot->id, current_index, next_index);
 					}
-					sem_post(&track_mutex[current_index]); 
+					sem_post(&track_mutex[current_index]); 									  
 				}
 				else if (next->p2 == NULL) {
 					next->p2 = pilot;
-					pilot->segment = next;
-					sem_wait(&track_mutex[current_index]); 
-					{
+					pilot->segment = next; 
+					if (next_index == 0)
+  					(pilot->lap)++;   
+					/* Libera posição atual */		
+					sem_wait(&track_mutex[current_index]);
+					{	
+						current = track[current_index];	    			
 						if (current->p1 == pilot) {
 							current->p1 = NULL;
-						}
+						}	
 						else if (current->p2 == pilot) {
 							current->p2 = NULL;
 						}
-						printf("[Piloto %d fez %d -> %d]\n", pilot->id, current_index, next_index);
 					}
-					sem_post(&track_mutex[current_index]); 
+					sem_post(&track_mutex[current_index]); 									  
 				}
 			}
 			else {
 				if (next->p1 == NULL) {
 					next->p1 = pilot;
-					pilot->segment = next;
-					sem_wait(&track_mutex[current_index]); 
-					{
+					pilot->segment = next; 
+					if (next_index == 0)
+  					(pilot->lap)++;   
+					/* Libera posição atual */		
+					sem_wait(&track_mutex[current_index]);
+					{	
+						current = track[current_index];	    			
 						if (current->p1 == pilot) {
 							current->p1 = NULL;
-						}
+						}	
 						else if (current->p2 == pilot) {
 							current->p2 = NULL;
 						}
-						printf("[Piloto %d fez %d -> %d]\n", pilot->id, current_index, next_index);
 					}
-					sem_post(&track_mutex[current_index]); 
+					sem_post(&track_mutex[current_index]); 									  
 				}
 			}
 		}
-		sem_post(&track_mutex[next_index]);	
+		sem_post(&track_mutex[next_index]);			
 		/* Barreira de sincronizção */
 		sem_post(&arrive[pilot->id - 1]);
 		sem_wait(&go_on[pilot->id - 1]);		
 	}
-	printf("[Piloto %d finalizou a corrida no índice %d]\n", pilot->id, pilot->segment->index);	
+	
+	/* remove piloto da pista */
+	current_index = pilot->segment->index;
+	sem_wait(&track_mutex[current_index]);	
+	{
+		current = track[current_index];	
+		if (current->p1 == pilot) {
+			current->p1 = NULL;
+		}	
+		else if (current->p2 == pilot) {
+			current->p2 = NULL;
+		}
+	}
+	sem_post(&track_mutex[current_index]);
+	printf("[Piloto %d finalizou a corrida.]\n", pilot->id);		
 
 	return NULL; 
 }
@@ -460,9 +549,12 @@ void join_threads()
 
 	for (i = 0; i < 2 * m; i++)
 		pthread_join(pids[i], NULL);
-
+	pthread_join(coordinator, NULL);
+	
+	/*	
 	printf("[Cancelando thread coordenadora.]\n");
 	pthread_cancel(coordinator);
+	*/
 }
 
 /**************************************************************************************************/
@@ -511,18 +603,17 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 	
-	setup_track();
-		
+	setup_track();		
 	setup_boxes();
-	create_boxes_mutexes();
 
-	if (read_input_file(argv[1])) {
+	if (read_input_file(argv[1])) {	
 		create_track_mutexes();		
+		create_boxes_mutexes();
 		setup_pilots();
 		setup_start_grid();
-		show_track();
-		show_boxes();
-		show_pilots();
+		/* show_track(); */
+		/* show_boxes(); */
+		/* show_pilots(); */
 	}
 
 	create_barrier_semaphores();
@@ -535,7 +626,6 @@ int main(int argc, char** argv)
 
 	join_threads();
 	
-	show_track();
 	show_pilots();
 
 	clean_up();
