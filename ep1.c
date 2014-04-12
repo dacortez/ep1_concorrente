@@ -57,14 +57,15 @@ typedef struct segment* Segment;
 /* Definição de uma estrutura piloto. */
 struct pilot
 {
-	int id;          /* identificador do piloto */
-	int team;        /* identificador da equipe */
-	Segment segment; /* identifica em qual segmento da pista o piloto está */
-	int lap;         /* número da volta em que o piloto está */
-	int fuel;        /* combustível disponível */
-	int is_finished; /* indica se já terminou a prova */
-	int order;       /* ordem de chegada no final da prova */
-	int points;      /* pontuação do piloto no campeonato */
+	int id;            /* identificador do piloto */
+	int team;          /* identificador da equipe */
+	Segment segment;   /* identifica em qual segmento da pista o piloto está */
+	int lap;           /* número da volta em que o piloto está */
+	int fuel;          /* combustível disponível */
+	int is_finished;   /* indica se já terminou a prova */
+	int order;         /* ordem de chegada no final da prova */
+	int points;        /* pontuação do piloto no campeonato */
+	int reduce;        /* indica de o piloto deve reduzir velocidade no final na corrida */
 };
 
 /* Coleção de pilotos da competição. */
@@ -98,7 +99,7 @@ int n;
 /* Número de equipes. */
 int m; 
 
-/* Porcentagem de pilotos que terá a velocidade modificada nas últimas dez voltas. */
+/* Porcentagem de pilotos que terá a velocidade modificada nas últimas FINAL_LAPS voltas. */
 int k = 0;
 
 /* Vetor de semaforos, uma para cada segmento de pista. */
@@ -132,6 +133,7 @@ int read_input_file(const char* file);
 void create_track_mutexes();
 void create_boxes_mutexes();
 void setup_pilots();
+void choose_reduced_pilots();
 int random_int(int a, int b);
 void setup_start_grid();
 
@@ -253,10 +255,10 @@ void create_boxes_mutexes()
 
 void setup_pilots()
 {
-	int i;
+	int i, num_pilots = 2 * m;
 
-	pilots = malloc(2 * m * sizeof(Pilot));
-	for (i = 0; i < 2 * m; i++) {
+	pilots = malloc(num_pilots * sizeof(Pilot));
+	for (i = 0; i < num_pilots; i++) {
 		pilots[i] = malloc(sizeof(*pilots[i]));
 		pilots[i]->id = i + 1;
 		pilots[i]->team = 1 + (i / 2);  
@@ -266,6 +268,26 @@ void setup_pilots()
 		pilots[i]->is_finished = 0;
 		pilots[i]->order = 0;
 		pilots[i]->points = random_int(200, 250);
+		pilots[i]->reduce = 0;
+	}
+}
+
+/**************************************************************************************************/
+
+void choose_reduced_pilots()
+{
+	int i, reduced, count, num_pilots = 2 * m;
+
+	if (k > 0) {
+		reduced = (num_pilots * k / 100.0);
+		count = 0;
+		while (count < reduced) {
+			i = random_int(0, num_pilots - 1);
+			if (!pilots[i]->reduce) {
+				++count;
+				pilots[i]->reduce = 1;	
+			}		
+		}		
 	}
 }
 
@@ -306,15 +328,14 @@ void show_pilots()
 	Segment s;
 	Pilot p;
 
-	printf("\n");
 	printf("------------------------------------------\n");
 	printf("PILOTOS\n");
-	printf("Id\tEquipe\tPontos\tPosição\tÍndice\n");
+	printf("Id\tEquipe\tPontos\tPosição\tÍndice\tR\n");
 	printf("------------------------------------------\n");
 	for (i = 0; i < 2 * m; i++) {
 		p = pilots[i];
 		s = p->segment;
-		printf("%d\t%d\t%d\t%d\t%d\n", p->id, p->team, p->points, s->position, s->index);
+		printf("%d\t%d\t%d\t%d\t%d\t%d\n", p->id, p->team, p->points, s->position, s->index, p->reduce);
 	}
 	printf("------------------------------------------\n");
 }
@@ -574,19 +595,25 @@ void* pilot_run(void* argument)
 {
 	Pilot pilot = *((Pilot*) argument);
 	int current_index, next_index;
+	int move_turn = 1;
 
 	while (!start);
 	
-	while (pilot->lap <= n) {	
-		current_index = pilot->segment->index;
-		next_index = (current_index + 1) % TRACK_SEGMENTS;		
-		sem_wait(&track_mutex[current_index]);		
-		sem_wait(&track_mutex[next_index]);	
-		{
-			try_to_move(pilot); 
+	while (pilot->lap <= n) {
+		if (pilot->reduce && pilot->lap > n - FINAL_LAPS)	{
+			move_turn = 1 - move_turn;		
 		}
-		sem_post(&track_mutex[next_index]);
-		sem_post(&track_mutex[current_index]);			
+		if (move_turn) {
+			current_index = pilot->segment->index;
+			next_index = (current_index + 1) % TRACK_SEGMENTS;		
+			sem_wait(&track_mutex[current_index]);		
+			sem_wait(&track_mutex[next_index]);	
+			{
+				try_to_move(pilot); 
+			}
+			sem_post(&track_mutex[next_index]);
+			sem_post(&track_mutex[current_index]);
+		}			
 		/* Barreira de sincronizção */
 		sem_post(&arrive[pilot->id - 1]);
 		sem_wait(&go_on[pilot->id - 1]);		
@@ -695,12 +722,12 @@ void show_race_result()
 	printf("\n");
 	printf("------------------------------------------\n");
 	printf("RESULTADO DA CORRIDA\n");
-	printf("Lugar\tPiloto\tEquipe\tPontuação\n");
+	printf("Lugar\tPiloto\tEquipe\tPontos\tR\n");
 	printf("------------------------------------------\n");
 	for (i = 0; i < num_pilots; i++) {
 		p = pilots[i];
 		pontuation = p->order <= 10 ? points[p->order - 1] : 0;
-		printf("%d\t%d\t%d\t%d\n", p->order, p->id, p->team, pontuation);	
+		printf("%d\t%d\t%d\t%d\t%d\n", p->order, p->id, p->team, pontuation, p->reduce);	
 	}	
 	printf("------------------------------------------\n");
 }
@@ -734,7 +761,7 @@ void show_championship_classification()
 	printf("\n");
 	printf("------------------------------------------\n");
 	printf("CLASSIFICAÇÃO NO CAMPEONATO\n");
-	printf("Lugar\tPiloto\tEquipe\tPontos\n");
+	printf("Lugar\tPiloto\tEquipe\tTotal_de_Pontos\n");
 	printf("------------------------------------------\n");
 	for (i = 0; i < num_pilots; i++) {
 		p = pilots[i];
@@ -850,6 +877,7 @@ int main(int argc, char** argv)
 		create_track_mutexes();		
 		create_boxes_mutexes();
 		setup_pilots();
+		choose_reduced_pilots();
 		setup_start_grid();
 		show_pilots();		
 		show_track();
