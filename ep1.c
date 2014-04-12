@@ -190,12 +190,13 @@ void setup_track()
 
 void setup_boxes()
 {
-	int i;
+	int i, j;
 
 	for (i = 0; i < BOXES_SEGMENTS; i++) {
 		boxes[i] = malloc(sizeof(*boxes[i]));
-		boxes[i]->index = i;
-		boxes[i]->position = i * SEGMENTS_DISTANCE;
+		j = TRACK_SEGMENTS - BOXES_SEGMENTS + i;
+		boxes[i]->index = track[j]->index;
+		boxes[i]->position = track[j]->position;
 		boxes[i]->is_double = 0;
 		boxes[i]->p1 = track[i]->p2 = NULL;
 	}
