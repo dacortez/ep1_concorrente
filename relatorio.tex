@@ -37,24 +37,24 @@
 \begin{document}
 
 \begin{center}
-	{\large \sc MAC0438 -- Programação Concorrente}
+{\large \sc MAC0438 -- Programação Concorrente}
 
-	\vspace{0.2cm}
+\vspace{0.2cm}
 
-	{\large \bf Relatório EP1 -- 21/04/2014}
+{\large \bf Relatório EP1 -- 21/04/2014}
 
-	\vspace{0.5cm}
+\vspace{0.5cm}
 
-	{\large Daniel Augusto Cortez -- 2960291}
+{\large Daniel Augusto Cortez -- 2960291}
 
-	\vspace{0.5cm}
-\end{center}	
+\vspace{0.5cm}
+\end{center}    
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Introdução}
 
-	Este programa implementa uma simulação de corrida de fórmula 1 conforme as especificações 
+Este programa implementa uma simulação de corrida de fórmula 1 conforme as especificações 
 contidas no enunciado do EP. A implementação é feita utilizando POSIX threads em C com semáforos
 para proteger a manipulação de variáveis compartilhadas (seção crítica) e criar uma barreira de
 sincronização.
@@ -63,27 +63,27 @@ sincronização.
 
 \section{Implementação}
 
-	A estrutura de dados básico do programa está contida nos tipos \verb|Segment| e \verb|Pilot| que 
+A estrutura de dados básico do programa está contida nos tipos \verb|Segment| e \verb|Pilot| que 
 descrevem um segmento de pista e um piloto. O código-fonte apresenta comentários descrevendo 
 melhor esses tipos.
 
-	Basicamente a simlução é implementada com uma thread para cada piloto. Uma pista foi criada 
+Basicamente a simlução é implementada com uma thread para cada piloto. Uma pista foi criada 
 como um vetor de 160 posições, cada posição representando um segmento de pista que pode conter
 dois pilotos, dependendo se ela é dupla ou não. As iterações ocorrem a cada 500 ms, quando um 
 piloto pode andar um segmento de pista, se tal segmento estiver disponível. Os segmentos são
 protegidos por semáforos (com valor inicial 2 para segmento duplo e valor inicial 1 para 
 segmento simples).
 
-	Foi criada uma barreira de sincronização utilizando uma thread coordenadora com semáforos que 
+Foi criada uma barreira de sincronização utilizando uma thread coordenadora com semáforos que 
 gerencia o final e o começo de uma iteração para todos os pilotos. Os relatórios de saída são 
 impressos entre o final das iterações de todos os pilotos e antes que se comece as próximas. 
 Nesse ponto não há nenhuma movimentação na pista e podemos ter certeza das informações lidas.
 
-	Quando um carro reduz sua velocidade pela metade, ele só deve andar a cada 2 iterações. 
+Quando um carro reduz sua velocidade pela metade, ele só deve andar a cada 2 iterações. 
 Para isso, criou-se uma variável local na thread do piloto para indicar se ele deve andar ou 
 não, sendo que seu valor se alterna a cada iteração do piloto.
 
-	A entrada nos boxes é garantida para os pilotos da mesma equipe nas voltas $n/2$ e $n/2 + 1$. 
+A entrada nos boxes é garantida para os pilotos da mesma equipe nas voltas $n/2$ e $n/2 + 1$. 
 Os boxes funcionam como uma pista simples paralela aos 250 metros final da pista principal. 
 A posição central dos boxes (\verb|PITSTOP_POINT|) comporta até 10 carros, um para cada equipe. 
 Para isso, o semaforo que protege tal posição foi iniciado com o valor 10. O carro de uma 
@@ -93,31 +93,31 @@ equipe só pode entrar nas faixas dos boxes quando seu companheiro não estiver 
 
 \section{Relatórios}
 
-	Relatórios são gerados a cada 15 minutos de corrida contendo a posição de todos os 
+Relatórios são gerados a cada 15 minutos de corrida contendo a posição de todos os 
 corredores. Além disso, toda vez que o primeiro colocado completa a i-ésima volta são
 exibidos os 3 primeiros colocados. Toda vez que um piloto sai do pitstop, essa informação 
 também é exibida com o tempo que ele gastou na parada.
 
-	Ao final da simulação são apresentados os resultados da corrida (lugar em que os pilotos 
+Ao final da simulação são apresentados os resultados da corrida (lugar em que os pilotos 
 chegaram com os pontos que ganharam), a classificação dos pilotos no campeonato (considerando 
 uma pontuação inicial aleatória para os pilotos) e a classificação final dos construtores.
 
-	Informações adicionais podem ser exibidas durante a execução da simulação se o programa
+Informações adicionais podem ser exibidas durante a execução da simulação se o programa
 for compilado com a variável \verb|DEBUG| no código-fonte do programa. 
 
-	Segue abaixo uma descrição mais detalhada de algumas das informações apresentados nos 
+Segue abaixo uma descrição mais detalhada de algumas das informações apresentados nos 
 relatórios que podem gerar alguma dúvida: 
 %
 \begin{itemize}
-	\item Índice: índice do segmento no vetor da pista (0 a 159) ou dos boxes (0 a 9).
-	\item Posição: posição em metros do segmento da pista ou dos boxes. 
-	\item P\_1 / P\_2: pilotos que ocupam as posições 1 e 2 de um determinado segmento da pista 
-  ou dos boxes.
-	\item Reduz: S/N indica se o piloto reduz velocidade nas últimas 10 voltas (escolhidos 
-  aleatoriamente).	
-	\item Volta\_Boxe: volta em que o piloto deve parar nos boxes.
-	\item Fuel: combustível disponível para o piloto em número de voltas.
-	\item Lugar: colocação do piloto na corrida em relação aos demais pilotos.
+\item Índice: índice do segmento no vetor da pista (0 a 159) ou dos boxes (0 a 9).
+\item Posição: posição em metros do segmento da pista ou dos boxes. 
+\item P\_1 / P\_2: pilotos que ocupam as posições 1 e 2 de um determinado segmento da pista 
+ou dos boxes.
+\item Reduz: S/N indica se o piloto reduz velocidade nas últimas 10 voltas (escolhidos 
+aleatoriamente).      
+\item Volta\_Boxe: volta em que o piloto deve parar nos boxes.
+\item Fuel: combustível disponível para o piloto em número de voltas.
+\item Lugar: colocação do piloto na corrida em relação aos demais pilotos.
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -128,411 +128,411 @@ A seguir apresentamos as saídas geradas pela simulação para os arquivos de en
 \verb|entrada1.txt| e \verb|entrada2.txt|. Em ambas as saídas, a opção \verb|DEBUG| não foi 
 utilizada.
 
-\subsection*{entrada1.txt}
+\subsection{entrada1.txt}
 
 Extraído do arquivo \verb|saida1.txt|.
 
 \begin{verbatim}
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	1	0	0	36
-1	1	1	0	0	36
-4	2	0	3975	159	36
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	2	0       0	35
-2	1	1	3975	159	36
-3	2	1	3925	157	36
+2       1       1       0       0       36
+1       1       1       0       0       36
+4       2       0       3975    159     36
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	3	0	0	34
-2	1	2	3950	158	35
-3	2	2	3925	157	35
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	4	0	0	33
-2	1	3	3950	158	34
-3	2	3	3925	157	34
+1       1       2       0       0       35
+2       1       1       3975    159     36
+3       2       1       3925    157     36
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	5	0	0	32
-2	1	4	3950	158	33
-3	2	4	3925	157	33
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	6	0	0	31
-2	1	5	3950	158	32
-3	2	5	3900	156	32
+1       1       3       0       0       34
+2       1       2       3950    158     35
+3       2       2       3925    157     35
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	7	0	0	30
-2	1	6	3950	158	31
-3	2	6	3900	156	31
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	8	0	0	29
-2	1	7	3950	158	30
-3	2	7	3900	156	30
+1       1       4       0       0       33
+2       1       3       3950    158     34
+3       2       3       3925    157     34
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	9	0	0	28
-2	1	8	3950	158	29
-3	2	8	3900	156	29
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	10	0	0	27
-2	1	9	3950	158	28
-3	2	9	3900	156	28
+1       1       5       0       0       32
+2       1       4       3950    158     33
+3       2       4       3925    157     33
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	11	0	0	26
-2	1	10	3950	158	27
-3	2	10	3900	156	27
+1       1       6       0       0       31
+2       1       5       3950    158     32
+3       2       5       3900    156     32
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	12	0	0	25
-2	1	11	3950	158	26
-3	2	11	3900	156	26
+1       1       7       0       0       30
+2       1       6       3950    158     31
+3       2       6       3900    156     31
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       8       0       0       29
+2       1       7       3950    158     30
+3       2       7       3900    156     30
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       9       0       0       28
+2       1       8       3950    158     29
+3       2       8       3900    156     29
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       10      0       0       27
+2       1       9       3950    158     28
+3       2       9       3900    156     28
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       11      0       0       26
+2       1       10      3950    158     27
+3       2       10      3900    156     27
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       12      0       0       25
+2       1       11      3950    158     26
+3       2       11      3900    156     26
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 RELATÓRIO DOS PILOTOS (TEMPO = 15.0')
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	12	975	39	25
-2	1	12	925	37	25
-3	2	12	875	35	25
-4	2	12	850	34	25
-5	3	12	625	25	25
-6	3	12	800	32	25
-7	4	12	775	31	25
-8	4	12	725	29	25
-9	5	12	575	23	25
-10	5	12	675	27	25
-11	6	12	125	5	25
-12	6	12	550	22	25
-13	7	12	525	21	25
-14	7	12	475	19	25
-15	8	12	175	7	25
-16	8	12	325	13	25
-17	9	12	425	17	25
-18	9	12	275	11	25
-19	10	12	375	15	25
-20	10	12	225	9	25
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	13	0	0	24
-2	1	12	3950	158	25
-3	2	12	3900	156	25
+1       1       12      975     39      25
+2       1       12      925     37      25
+3       2       12      875     35      25
+4       2       12      850     34      25
+5       3       12      625     25      25
+6       3       12      800     32      25
+7       4       12      775     31      25
+8       4       12      725     29      25
+9       5       12      575     23      25
+10      5       12      675     27      25
+11      6       12      125     5       25
+12      6       12      550     22      25
+13      7       12      525     21      25
+14      7       12      475     19      25
+15      8       12      175     7       25
+16      8       12      325     13      25
+17      9       12      425     17      25
+18      9       12      275     11      25
+19      10      12      375     15      25
+20      10      12      225     9       25
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	14	0	0	23
-2	1	13	3950	158	24
-3	2	13	3900	156	24
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	15	0	0	22
-2	1	14	3950	158	23
-3	2	14	3900	156	23
+1       1       13      0       0       24
+2       1       12      3950    158     25
+3       2       12      3900    156     25
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	16	0	0	21
-2	1	15	3950	158	22
-3	2	15	3900	156	22
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	17	0	0	20
-2	1	16	3950	158	21
-3	2	16	3900	156	21
+1       1       14      0       0       23
+2       1       13      3950    158     24
+3       2       13      3900    156     24
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	18	0	0	19
-2	1	17	3950	158	20
-3	2	17	3900	156	20
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	19	0	0	18
-2	1	18	3950	158	19
-3	2	18	3900	156	19
+1       1       15      0       0       22
+2       1       14      3950    158     23
+3       2       14      3900    156     23
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	20	0	0	17
-2	1	19	3950	158	18
-3	2	19	3900	156	18
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	21	0	0	16
-2	1	20	3950	158	17
-3	2	20	3900	156	17
+1       1       16      0       0       21
+2       1       15      3950    158     22
+3       2       15      3900    156     22
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	22	0	0	15
-2	1	21	3950	158	16
-3	2	21	3900	156	16
+1       1       17      0       0       20
+2       1       16      3950    158     21
+3       2       16      3900    156     21
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	23	0	0	14
-2	1	22	3950	158	15
-3	2	22	3900	156	15
+1       1       18      0       0       19
+2       1       17      3950    158     20
+3       2       17      3900    156     20
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       19      0       0       18
+2       1       18      3950    158     19
+3       2       18      3900    156     19
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       20      0       0       17
+2       1       19      3950    158     18
+3       2       19      3900    156     18
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       21      0       0       16
+2       1       20      3950    158     17
+3       2       20      3900    156     17
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       22      0       0       15
+2       1       21      3950    158     16
+3       2       21      3900    156     16
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       23      0       0       14
+2       1       22      3950    158     15
+3       2       22      3900    156     15
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 RELATÓRIO DOS PILOTOS (TEMPO = 30.0')
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	23	1975	79	14
-2	1	23	1925	77	14
-3	2	23	1875	75	14
-4	2	23	1850	74	14
-5	3	23	1600	64	14
-6	3	23	1800	72	14
-7	4	23	1750	70	14
-8	4	23	1700	68	14
-9	5	23	1550	62	14
-10	5	23	1650	66	14
-11	6	23	1050	42	14
-12	6	23	1500	60	14
-13	7	23	1450	58	14
-14	7	23	1400	56	14
-15	8	23	1100	44	14
-16	8	23	1250	50	14
-17	9	23	1350	54	14
-18	9	23	1200	48	14
-19	10	23	1300	52	14
-20	10	23	1150	46	14
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	24	0	0	13
-2	1	23	3950	158	14
-3	2	23	3900	156	14
+1       1       23      1975    79      14
+2       1       23      1925    77      14
+3       2       23      1875    75      14
+4       2       23      1850    74      14
+5       3       23      1600    64      14
+6       3       23      1800    72      14
+7       4       23      1750    70      14
+8       4       23      1700    68      14
+9       5       23      1550    62      14
+10      5       23      1650    66      14
+11      6       23      1050    42      14
+12      6       23      1500    60      14
+13      7       23      1450    58      14
+14      7       23      1400    56      14
+15      8       23      1100    44      14
+16      8       23      1250    50      14
+17      9       23      1350    54      14
+18      9       23      1200    48      14
+19      10      23      1300    52      14
+20      10      23      1150    46      14
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	25	0	0	12
-2	1	24	3950	158	13
-3	2	24	3900	156	13
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	26	0	0	11
-2	1	25	3950	158	12
-3	2	25	3900	156	12
+1       1       24      0       0       13
+2       1       23      3950    158     14
+3       2       23      3900    156     14
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	27	0	0	10
-2	1	26	3950	158	11
-3	2	26	3900	156	11
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	28	0	0	9
-2	1	27	3950	158	10
-3	2	27	3900	156	10
+1       1       25      0       0       12
+2       1       24      3950    158     13
+3       2       24      3900    156     13
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	29	0	0	8
-2	1	28	3950	158	9
-3	2	28	3900	156	9
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	30	0	0	7
-2	1	29	3950	158	8
-3	2	29	3900	156	8
+1       1       26      0       0       11
+2       1       25      3950    158     12
+3       2       25      3900    156     12
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	31	0	0	6
-2	1	30	3950	158	7
-3	2	30	3900	156	7
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	32	0	0	5
-2	1	31	3950	158	6
-3	2	31	3900	156	6
+1       1       27      0       0       10
+2       1       26      3950    158     11
+3       2       26      3900    156     11
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	33	0	0	4
-2	1	32	3950	158	5
-3	2	32	3900	156	5
+1       1       28      0       0       9
+2       1       27      3950    158     10
+3       2       27      3900    156     10
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	34	0	0	3
-2	1	33	3950	158	4
-3	2	33	3900	156	4
+1       1       29      0       0       8
+2       1       28      3950    158     9
+3       2       28      3900    156     9
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       30      0       0       7
+2       1       29      3950    158     8
+3       2       29      3900    156     8
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       31      0       0       6
+2       1       30      3950    158     7
+3       2       30      3900    156     7
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       32      0       0       5
+2       1       31      3950    158     6
+3       2       31      3900    156     6
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       33      0       0       4
+2       1       32      3950    158     5
+3       2       32      3900    156     5
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       34      0       0       3
+2       1       33      3950    158     4
+3       2       33      3900    156     4
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 RELATÓRIO DOS PILOTOS (TEMPO = 45.0')
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	34	2975	119	3
-2	1	34	2925	117	3
-3	2	34	2875	115	3
-4	2	34	2850	114	3
-5	3	34	2600	104	3
-6	3	34	2800	112	3
-7	4	34	2750	110	3
-8	4	34	2700	108	3
-9	5	34	2550	102	3
-10	5	34	2650	106	3
-11	6	34	2050	82	3
-12	6	34	2500	100	3
-13	7	34	2450	98	3
-14	7	34	2400	96	3
-15	8	34	2100	84	3
-16	8	34	2250	90	3
-17	9	34	2350	94	3
-18	9	34	2200	88	3
-19	10	34	2300	92	3
-20	10	34	2150	86	3
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	35	0	0	2
-2	1	34	3950	158	3
-3	2	34	3900	156	3
+1       1       34      2975    119     3
+2       1       34      2925    117     3
+3       2       34      2875    115     3
+4       2       34      2850    114     3
+5       3       34      2600    104     3
+6       3       34      2800    112     3
+7       4       34      2750    110     3
+8       4       34      2700    108     3
+9       5       34      2550    102     3
+10      5       34      2650    106     3
+11      6       34      2050    82      3
+12      6       34      2500    100     3
+13      7       34      2450    98      3
+14      7       34      2400    96      3
+15      8       34      2100    84      3
+16      8       34      2250    90      3
+17      9       34      2350    94      3
+18      9       34      2200    88      3
+19      10      34      2300    92      3
+20      10      34      2150    86      3
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	36	0	0	1
-4	2	35	3925	157	2
-6	3	35	3875	155	2
+1       1       35      0       0       2
+2       1       34      3950    158     3
+3       2       34      3900    156     3
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+2       1       36      0       0       1
+4       2       35      3925    157     2
+6       3       35      3875    155     2
 ----------------------------------------------------------
 [Piloto 1 saiu do pitstop e levou 6 segundos]
 [Piloto 3 saiu do pitstop e levou 4 segundos]
@@ -548,11 +548,11 @@ Piloto	Equipe	Volta	Posição	Índice	Fuel
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	37	0	0	36
-1	1	36	3975	159	36
-3	2	36	3925	157	36
+2       1       37      0       0       36
+1       1       36      3975    159     36
+3       2       36      3925    157     36
 ----------------------------------------------------------
 [Piloto 8 saiu do pitstop e levou 5 segundos]
 [Piloto 4 saiu do pitstop e levou 9 segundos]
@@ -566,782 +566,782 @@ Piloto	Equipe	Volta	Posição	Índice	Fuel
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	38	0	0	35
-1	1	37	3950	158	35
-3	2	37	3900	156	35
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-2	1	39	0	0	34
-1	1	38	3950	158	34
-3	2	38	3900	156	34
+2       1       38      0       0       35
+1       1       37      3950    158     35
+3       2       37      3900    156     35
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	40	0	0	33
-1	1	39	3950	158	33
-3	2	39	3900	156	33
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-2	1	41	0	0	32
-1	1	40	3950	158	32
-3	2	40	3900	156	32
+2       1       39      0       0       34
+1       1       38      3950    158     34
+3       2       38      3900    156     34
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	42	0	0	31
-1	1	41	3950	158	31
-3	2	41	3900	156	31
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-2	1	43	0	0	30
-1	1	42	3950	158	30
-3	2	42	3900	156	30
+2       1       40      0       0       33
+1       1       39      3950    158     33
+3       2       39      3900    156     33
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	44	0	0	29
-1	1	43	3950	158	29
-3	2	43	3900	156	29
+2       1       41      0       0       32
+1       1       40      3950    158     32
+3       2       40      3900    156     32
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	45	0	0	28
-1	1	44	3950	158	28
-3	2	44	3900	156	28
+2       1       42      0       0       31
+1       1       41      3950    158     31
+3       2       41      3900    156     31
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+2       1       43      0       0       30
+1       1       42      3950    158     30
+3       2       42      3900    156     30
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+2       1       44      0       0       29
+1       1       43      3950    158     29
+3       2       43      3900    156     29
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+2       1       45      0       0       28
+1       1       44      3950    158     28
+3       2       44      3900    156     28
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 RELATÓRIO DOS PILOTOS (TEMPO = 60.0')
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	45	3625	145	27
-2	1	45	3675	147	28
-3	2	45	3575	143	27
-4	2	45	3350	134	28
-5	3	45	3200	128	27
-6	3	45	3300	132	28
-7	4	45	3450	138	27
-8	4	45	3400	136	28
-9	5	45	3100	124	27
-10	5	45	3275	131	28
-11	6	45	2675	107	27
-12	6	45	3050	122	28
-13	7	45	2975	119	27
-14	7	45	3150	126	28
-15	8	45	2900	116	27
-16	8	45	3025	121	28
-17	9	45	2950	118	27
-18	9	45	2625	105	28
-19	10	45	2850	114	27
-20	10	45	2800	112	28
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-2	1	46	0	0	27
-1	1	45	3950	158	27
-3	2	45	3900	156	27
+1       1       45      3625    145     27
+2       1       45      3675    147     28
+3       2       45      3575    143     27
+4       2       45      3350    134     28
+5       3       45      3200    128     27
+6       3       45      3300    132     28
+7       4       45      3450    138     27
+8       4       45      3400    136     28
+9       5       45      3100    124     27
+10      5       45      3275    131     28
+11      6       45      2675    107     27
+12      6       45      3050    122     28
+13      7       45      2975    119     27
+14      7       45      3150    126     28
+15      8       45      2900    116     27
+16      8       45      3025    121     28
+17      9       45      2950    118     27
+18      9       45      2625    105     28
+19      10      45      2850    114     27
+20      10      45      2800    112     28
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	47	0	0	26
-1	1	46	3950	158	26
-3	2	46	3900	156	26
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-2	1	48	0	0	25
-1	1	47	3950	158	25
-3	2	47	3900	156	25
+2       1       46      0       0       27
+1       1       45      3950    158     27
+3       2       45      3900    156     27
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	49	0	0	24
-1	1	48	3950	158	24
-3	2	48	3900	156	24
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-2	1	50	0	0	23
-1	1	49	3950	158	23
-3	2	49	3900	156	23
+2       1       47      0       0       26
+1       1       46      3950    158     26
+3       2       46      3900    156     26
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	51	0	0	22
-1	1	50	3950	158	22
-3	2	50	3900	156	22
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-2	1	52	0	0	21
-1	1	51	3950	158	21
-3	2	51	3900	156	21
+2       1       48      0       0       25
+1       1       47      3950    158     25
+3       2       47      3900    156     25
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	53	0	0	20
-1	1	52	3950	158	20
-3	2	52	3900	156	20
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-2	1	54	0	0	19
-1	1	53	3950	158	19
-3	2	53	3900	156	19
+2       1       49      0       0       24
+1       1       48      3950    158     24
+3       2       48      3900    156     24
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	55	0	0	18
-1	1	54	3950	158	18
-3	2	54	3900	156	18
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-2	1	56	0	0	17
-1	1	55	3950	158	17
-3	2	55	3900	156	17
+2       1       50      0       0       23
+1       1       49      3950    158     23
+3       2       49      3900    156     23
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	57	0	0	16
-1	1	56	3950	158	16
-3	2	56	3900	156	16
+2       1       51      0       0       22
+1       1       50      3950    158     22
+3       2       50      3900    156     22
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+2       1       52      0       0       21
+1       1       51      3950    158     21
+3       2       51      3900    156     21
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+2       1       53      0       0       20
+1       1       52      3950    158     20
+3       2       52      3900    156     20
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+2       1       54      0       0       19
+1       1       53      3950    158     19
+3       2       53      3900    156     19
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+2       1       55      0       0       18
+1       1       54      3950    158     18
+3       2       54      3900    156     18
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+2       1       56      0       0       17
+1       1       55      3950    158     17
+3       2       55      3900    156     17
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+2       1       57      0       0       16
+1       1       56      3950    158     16
+3       2       56      3900    156     16
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 RELATÓRIO DOS PILOTOS (TEMPO = 75.0')
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	57	625	25	15
-2	1	57	675	27	16
-3	2	57	575	23	15
-4	2	57	350	14	16
-5	3	57	200	8	15
-6	3	57	300	12	16
-7	4	57	450	18	15
-8	4	57	400	16	16
-9	5	57	100	4	15
-10	5	57	275	11	16
-11	6	56	3675	147	16
-12	6	57	50	2	16
-13	7	56	3950	158	16
-14	7	57	150	6	16
-15	8	56	3850	154	16
-16	8	57	0	0	16
-17	9	56	3900	156	16
-18	9	56	3625	145	17
-19	10	56	3825	153	16
-20	10	56	3775	151	17
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-2	1	58	0	0	15
-1	1	57	3950	158	15
-3	2	57	3900	156	15
+1       1       57      625     25      15
+2       1       57      675     27      16
+3       2       57      575     23      15
+4       2       57      350     14      16
+5       3       57      200     8       15
+6       3       57      300     12      16
+7       4       57      450     18      15
+8       4       57      400     16      16
+9       5       57      100     4       15
+10      5       57      275     11      16
+11      6       56      3675    147     16
+12      6       57      50      2       16
+13      7       56      3950    158     16
+14      7       57      150     6       16
+15      8       56      3850    154     16
+16      8       57      0       0       16
+17      9       56      3900    156     16
+18      9       56      3625    145     17
+19      10      56      3825    153     16
+20      10      56      3775    151     17
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	59	0	0	14
-1	1	58	3950	158	14
-3	2	58	3900	156	14
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-2	1	60	0	0	13
-1	1	59	3950	158	13
-3	2	59	3900	156	13
+2       1       58      0       0       15
+1       1       57      3950    158     15
+3       2       57      3900    156     15
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	61	0	0	12
-1	1	60	3950	158	12
-3	2	60	3900	156	12
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-2	1	62	0	0	11
-3	2	61	3900	156	11
-7	4	61	3775	151	11
+2       1       59      0       0       14
+1       1       58      3950    158     14
+3       2       58      3900    156     14
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	63	0	0	10
-3	2	62	3950	158	10
-7	4	62	3625	145	10
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-2	1	64	0	0	9
-3	2	63	3950	158	9
-7	4	63	2975	119	9
+2       1       60      0       0       13
+1       1       59      3950    158     13
+3       2       59      3900    156     13
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	65	0	0	8
-3	2	64	3975	159	8
-7	4	64	3125	125	8
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-2	1	66	0	0	7
-3	2	65	3975	159	7
-7	4	65	3125	125	7
+2       1       61      0       0       12
+1       1       60      3950    158     12
+3       2       60      3900    156     12
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	67	0	0	6
-3	2	66	3950	158	6
-7	4	66	3225	129	6
+2       1       62      0       0       11
+3       2       61      3900    156     11
+7       4       61      3775    151     11
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	68	0	0	5
-3	2	67	3950	158	5
-7	4	67	3125	125	5
+2       1       63      0       0       10
+3       2       62      3950    158     10
+7       4       62      3625    145     10
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+2       1       64      0       0       9
+3       2       63      3950    158     9
+7       4       63      2975    119     9
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+2       1       65      0       0       8
+3       2       64      3975    159     8
+7       4       64      3125    125     8
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+2       1       66      0       0       7
+3       2       65      3975    159     7
+7       4       65      3125    125     7
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+2       1       67      0       0       6
+3       2       66      3950    158     6
+7       4       66      3225    129     6
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+2       1       68      0       0       5
+3       2       67      3950    158     5
+7       4       67      3125    125     5
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 RELATÓRIO DOS PILOTOS (TEMPO = 90.0')
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	64	2725	109	8
-2	1	68	1350	54	5
-3	2	68	1300	52	4
-4	2	68	375	15	5
-5	3	68	250	10	4
-6	3	68	325	13	5
-7	4	68	475	19	4
-8	4	68	425	17	5
-9	5	68	225	9	4
-10	5	68	300	12	5
-11	6	67	2225	89	5
-12	6	68	175	7	5
-13	7	68	100	4	4
-14	7	67	3300	132	6
-15	8	67	2300	92	5
-16	8	68	150	6	5
-17	9	64	2200	88	8
-18	9	64	2150	86	9
-19	10	67	2275	91	5
-20	10	67	3275	131	6
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-2	1	69	0	0	4
-3	2	68	3950	158	4
-7	4	68	3175	127	4
+1       1       64      2725    109     8
+2       1       68      1350    54      5
+3       2       68      1300    52      4
+4       2       68      375     15      5
+5       3       68      250     10      4
+6       3       68      325     13      5
+7       4       68      475     19      4
+8       4       68      425     17      5
+9       5       68      225     9       4
+10      5       68      300     12      5
+11      6       67      2225    89      5
+12      6       68      175     7       5
+13      7       68      100     4       4
+14      7       67      3300    132     6
+15      8       67      2300    92      5
+16      8       68      150     6       5
+17      9       64      2200    88      8
+18      9       64      2150    86      9
+19      10      67      2275    91      5
+20      10      67      3275    131     6
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	70	0	0	3
-3	2	69	3950	158	3
-7	4	69	3125	125	3
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-2	1	71	0	0	2
-3	2	70	3950	158	2
-7	4	70	3275	131	2
+2       1       69      0       0       4
+3       2       68      3950    158     4
+7       4       68      3175    127     4
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-3	2	71	0	0	1
-7	4	70	3325	133	2
-8	4	70	3275	131	3
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-7	4	71	0	0	1
-8	4	70	3950	158	3
-4	2	70	3900	156	3
+2       1       70      0       0       3
+3       2       69      3950    158     3
+7       4       69      3125    125     3
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-8	4	71	0	0	2
-4	2	70	3950	158	3
-6	3	70	3925	157	3
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-4	2	71	0	0	2
-6	3	70	3975	159	3
-10	5	70	3950	158	3
+2       1       71      0       0       2
+3       2       70      3950    158     2
+7       4       70      3275    131     2
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-6	3	71	0	0	2
-10	5	70	3975	159	3
-5	3	70	3925	157	2
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-10	5	71	0	0	2
-5	3	70	3950	158	2
-9	5	70	3925	157	2
+3       2       71      0       0       1
+7       4       70      3325    133     2
+8       4       70      3275    131     3
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-5	3	71	0	0	1
-9	5	70	3975	159	2
-12	6	70	3925	157	3
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-9	5	71	0	0	1
-12	6	70	3950	158	3
-16	8	70	3925	157	3
+7       4       71      0       0       1
+8       4       70      3950    158     3
+4       2       70      3900    156     3
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-12	6	71	0	0	2
-16	8	70	3975	159	3
-13	7	70	3925	157	2
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-16	8	71	0	0	2
-13	7	70	3950	158	2
-14	7	70	3075	123	3
+8       4       71      0       0       2
+4       2       70      3950    158     3
+6       3       70      3925    157     3
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-13	7	71	0	0	1
-14	7	70	3125	125	3
-20	10	70	3100	124	3
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-14	7	71	0	0	2
-20	10	70	3975	159	3
-15	8	70	3000	120	2
+4       2       71      0       0       2
+6       3       70      3975    159     3
+10      5       70      3950    158     3
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-20	10	71	0	0	2
-15	8	70	3025	121	2
-19	10	70	3000	120	2
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-15	8	71	0	0	1
-19	10	70	3975	159	2
-11	6	70	3075	123	2
+6       3       71      0       0       2
+10      5       70      3975    159     3
+5       3       70      3925    157     2
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-19	10	71	0	0	1
-11	6	70	3100	124	2
-1	1	66	1600	64	6
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-11	6	71	0	0	1
-1	1	66	2050	82	6
-17	9	66	1500	60	6
+10      5       71      0       0       2
+5       3       70      3950    158     2
+9       5       70      3925    157     2
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	67	0	0	5
-17	9	66	3450	138	6
-18	9	66	3400	136	7
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	67	0	0	5
-17	9	66	3475	139	6
-18	9	66	3400	136	7
+5       3       71      0       0       1
+9       5       70      3975    159     2
+12      6       70      3925    157     3
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	68	0	0	4
-17	9	67	3450	138	5
-18	9	67	3400	136	6
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	68	0	0	4
-17	9	67	3475	139	5
-18	9	67	3400	136	6
+9       5       71      0       0       1
+12      6       70      3950    158     3
+16      8       70      3925    157     3
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	69	0	0	3
-17	9	68	3450	138	4
-18	9	68	3400	136	5
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	69	0	0	3
-17	9	68	3475	139	4
-18	9	68	3400	136	5
+12      6       71      0       0       2
+16      8       70      3975    159     3
+13      7       70      3925    157     2
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	70	0	0	2
-17	9	69	3450	138	3
-18	9	69	3400	136	4
+16      8       71      0       0       2
+13      7       70      3950    158     2
+14      7       70      3075    123     3
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	70	0	0	2
-17	9	69	3475	139	3
-18	9	69	3400	136	4
+13      7       71      0       0       1
+14      7       70      3125    125     3
+20      10      70      3100    124     3
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+14      7       71      0       0       2
+20      10      70      3975    159     3
+15      8       70      3000    120     2
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+20      10      71      0       0       2
+15      8       70      3025    121     2
+19      10      70      3000    120     2
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+15      8       71      0       0       1
+19      10      70      3975    159     2
+11      6       70      3075    123     2
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+19      10      71      0       0       1
+11      6       70      3100    124     2
+1       1       66      1600    64      6
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+11      6       71      0       0       1
+1       1       66      2050    82      6
+17      9       66      1500    60      6
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       67      0       0       5
+17      9       66      3450    138     6
+18      9       66      3400    136     7
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       67      0       0       5
+17      9       66      3475    139     6
+18      9       66      3400    136     7
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       68      0       0       4
+17      9       67      3450    138     5
+18      9       67      3400    136     6
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       68      0       0       4
+17      9       67      3475    139     5
+18      9       67      3400    136     6
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       69      0       0       3
+17      9       68      3450    138     4
+18      9       68      3400    136     5
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       69      0       0       3
+17      9       68      3475    139     4
+18      9       68      3400    136     5
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       70      0       0       2
+17      9       69      3450    138     3
+18      9       69      3400    136     4
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       70      0       0       2
+17      9       69      3475    139     3
+18      9       69      3400    136     4
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 RELATÓRIO DOS PILOTOS (TEMPO = 105.0')
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	70	1175	47	2
-2	1	71	0	0	2
-3	2	71	0	0	1
-4	2	71	0	0	2
-5	3	71	0	0	1
-6	3	71	0	0	2
-7	4	71	0	0	1
-8	4	71	0	0	2
-9	5	71	0	0	1
-10	5	71	0	0	2
-11	6	71	0	0	1
-12	6	71	0	0	2
-13	7	71	0	0	1
-14	7	71	0	0	2
-15	8	71	0	0	1
-16	8	71	0	0	2
-17	9	70	650	26	2
-18	9	70	575	23	3
-19	10	71	0	0	1
-20	10	71	0	0	2
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	71	0	0	1
-17	9	70	3450	138	2
-18	9	70	3400	136	3
+1       1       70      1175    47      2
+2       1       71      0       0       2
+3       2       71      0       0       1
+4       2       71      0       0       2
+5       3       71      0       0       1
+6       3       71      0       0       2
+7       4       71      0       0       1
+8       4       71      0       0       2
+9       5       71      0       0       1
+10      5       71      0       0       2
+11      6       71      0       0       1
+12      6       71      0       0       2
+13      7       71      0       0       1
+14      7       71      0       0       2
+15      8       71      0       0       1
+16      8       71      0       0       2
+17      9       70      650     26      2
+18      9       70      575     23      3
+19      10      71      0       0       1
+20      10      71      0       0       2
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-17	9	71	0	0	1
-18	9	70	3925	157	3
+1       1       71      0       0       1
+17      9       70      3450    138     2
+18      9       70      3400    136     3
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-18	9	71	0	0	2
+17      9       71      0       0       1
+18      9       70      3925    157     3
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+18      9       71      0       0       2
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 RESULTADO DA CORRIDA
-Lugar	Piloto	Equipe	Pontos	Reduz
+Lugar   Piloto  Equipe  Pontos  Reduz
 ----------------------------------------------------------
-1	2	1	25	N
-2	3	2	18	N
-3	7	4	15	N
-4	8	4	12	N
-5	4	2	10	N
-6	6	3	8	N
-7	10	5	6	N
-8	5	3	4	N
-9	9	5	2	N
-10	12	6	1	N
-11	16	8	0	N
-12	13	7	0	N
-13	14	7	0	N
-14	20	10	0	N
-15	15	8	0	N
-16	19	10	0	N
-17	11	6	0	N
-18	1	1	0	S
-19	17	9	0	S
-20	18	9	0	S
+1       2       1       25      N
+2       3       2       18      N
+3       7       4       15      N
+4       8       4       12      N
+5       4       2       10      N
+6       6       3       8       N
+7       10      5       6       N
+8       5       3       4       N
+9       9       5       2       N
+10      12      6       1       N
+11      16      8       0       N
+12      13      7       0       N
+13      14      7       0       N
+14      20      10      0       N
+15      15      8       0       N
+16      19      10      0       N
+17      11      6       0       N
+18      1       1       0       S
+19      17      9       0       S
+20      18      9       0       S
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 CLASSIFICAÇÃO NO CAMPEONATO
-Lugar	Piloto	Equipe	Total_de_Pontos
+Lugar   Piloto  Equipe  Total_de_Pontos
 ----------------------------------------------------------
-1	2	1	273
-2	7	4	251
-3	5	3	246
-4	13	7	245
-5	16	8	229
-6	3	2	228
-7	17	9	228
-8	4	2	227
-9	6	3	226
-10	10	5	226
-11	8	4	222
-12	20	10	220
-13	19	10	218
-14	1	1	217
-15	14	7	210
-16	15	8	209
-17	18	9	206
-18	9	5	204
-19	11	6	204
-20	12	6	202
+1       2       1       273
+2       7       4       251
+3       5       3       246
+4       13      7       245
+5       16      8       229
+6       3       2       228
+7       17      9       228
+8       4       2       227
+9       6       3       226
+10      10      5       226
+11      8       4       222
+12      20      10      220
+13      19      10      218
+14      1       1       217
+15      14      7       210
+16      15      8       209
+17      18      9       206
+18      9       5       204
+19      11      6       204
+20      12      6       202
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 CLASSIFICAÇÃO DE CONSTRUTORES
-Lugar	Equipe	Pontos
+Lugar   Equipe  Pontos
 ----------------------------------------------------------
-1	1	490
-2	4	473
-3	3	472
-4	2	455
-5	7	455
-6	8	438
-7	10	438
-8	9	434
-9	5	430
-10	6	406
+1       1       490
+2       4       473
+3       3       472
+4       2       455
+5       7       455
+6       8       438
+7       10      438
+8       9       434
+9       5       430
+10      6       406
 ----------------------------------------------------------
 \end{verbatim}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection*{entrada2.txt}
+\subsection{entrada2.txt}
 
 Extraído do arquivo \verb|saida2.txt|.
 
 \begin{verbatim}
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	1	0	0	6
-2	1	1	0	0	6
-4	2	0	3975	159	6
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	2	0	0	5
-2	1	1	3975	159	6
-3	2	1	3950	158	6
+1       1       1       0       0       6
+2       1       1       0       0       6
+4       2       0       3975    159     6
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	3	0	0	4
-2	1	2	3975	159	5
-3	2	2	3925	157	5
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-1	1	4	0	0	3
-2	1	3	3975	159	4
-3	2	3	3925	157	4
+1       1       2       0       0       5
+2       1       1       3975    159     6
+3       2       1       3950    158     6
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	5	0	0	2
-2	1	4	3975	159	3
-3	2	4	3925	157	3
+1       1       3       0       0       4
+2       1       2       3975    159     5
+3       2       2       3925    157     5
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-2	1	6	0	0	1
-4	2	5	3925	157	2
-6	3	5	3850	154	2
+1       1       4       0       0       3
+2       1       3       3975    159     4
+3       2       3       3925    157     4
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+1       1       5       0       0       2
+2       1       4       3975    159     3
+3       2       4       3925    157     3
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+2       1       6       0       0       1
+4       2       5       3925    157     2
+6       3       5       3850    154     2
 ----------------------------------------------------------
 [Piloto 1 saiu do pitstop e levou 9 segundos]
 [Piloto 3 saiu do pitstop e levou 10 segundos]
@@ -1352,11 +1352,11 @@ Piloto	Equipe	Volta	Posição	Índice	Fuel
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-4	2	7	0	0	6
-1	1	6	3925	157	6
-3	2	6	3800	152	6
+4       2       7       0       0       6
+1       1       6       3925    157     6
+3       2       6       3800    152     6
 ----------------------------------------------------------
 [Piloto 2 saiu do pitstop e levou 9 segundos]
 [Piloto 10 saiu do pitstop e levou 4 segundos]
@@ -1365,163 +1365,162 @@ Piloto	Equipe	Volta	Posição	Índice	Fuel
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-4	2	8	0	0	5
-1	1	7	3925	157	5
-2	1	7	3875	155	6
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-4	2	9	0	0	4
-1	1	8	3925	157	4
-2	1	8	3875	155	5
+4       2       8       0       0       5
+1       1       7       3925    157     5
+2       1       7       3875    155     6
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-4	2	10	0	0	3
-1	1	9	3925	157	3
-2	1	9	3875	155	4
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-4	2	11	0	0	2
-1	1	10	3925	157	2
-2	1	10	3875	155	3
+4       2       9       0       0       4
+1       1       8       3925    157     4
+2       1       8       3875    155     5
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-1	1	11	0	0	1
-2	1	10	3950	158	3
-3	2	10	3875	155	2
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-2	1	11	0	0	2
-3	2	10	3925	157	2
-10	5	10	3900	156	3
+4       2       10      0       0       3
+1       1       9       3925    157     3
+2       1       9       3875    155     4
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-3	2	11	0	0	1
-10	5	10	3975	159	3
-6	3	10	3925	157	3
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-10	5	11	0	0	2
-6	3	10	3950	158	3
-5	3	10	3900	156	2
+4       2       11      0       0       2
+1       1       10      3925    157     2
+2       1       10      3875    155     3
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-6	3	11	0	0	2
-5	3	10	3950	158	2
-9	5	10	3925	157	2
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-5	3	11	0	0	1
-9	5	10	3975	159	2
-8	4	10	3925	157	3
+1       1       11      0       0       1
+2       1       10      3950    158     3
+3       2       10      3875    155     2
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-9	5	11	0	0	1
-8	4	10	3950	158	3
-7	4	10	3900	156	2
-----------------------------------------------------------
-
-----------------------------------------------------------
-PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
-----------------------------------------------------------
-8	4	11	0	0	2
-7	4	10	3950	158	2
+2       1       11      0       0       2
+3       2       10      3925    157     2
+10      5       10      3900    156     3
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 PRIMEIROS COLOCADOS
-Piloto	Equipe	Volta	Posição	Índice	Fuel
+Piloto  Equipe  Volta   Posição Índice  Fuel
 ----------------------------------------------------------
-7	4	11	0	0	1
+3       2       11      0       0       1
+10      5       10      3975    159     3
+6       3       10      3925    157     3
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+10      5       11      0       0       2
+6       3       10      3950    158     3
+5       3       10      3900    156     2
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+6       3       11      0       0       2
+5       3       10      3950    158     2
+9       5       10      3925    157     2
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+5       3       11      0       0       1
+9       5       10      3975    159     2
+8       4       10      3925    157     3
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+9       5       11      0       0       1
+8       4       10      3950    158     3
+7       4       10      3900    156     2
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+8       4       11      0       0       2
+7       4       10      3950    158     2
+----------------------------------------------------------
+
+----------------------------------------------------------
+PRIMEIROS COLOCADOS
+Piloto  Equipe  Volta   Posição Índice  Fuel
+----------------------------------------------------------
+7       4       11      0       0       1
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 RESULTADO DA CORRIDA
-Lugar	Piloto	Equipe	Pontos	Reduz
+Lugar   Piloto  Equipe  Pontos  Reduz
 ----------------------------------------------------------
-1	4	2	25	N
-2	1	1	18	N
-3	2	1	15	N
-4	3	2	12	N
-5	10	5	10	N
-6	6	3	8	N
-7	5	3	6	N
-8	9	5	4	N
-9	8	4	2	N
-10	7	4	1	N
+1       4       2       25      N
+2       1       1       18      N
+3       2       1       15      N
+4       3       2       12      N
+5       10      5       10      N
+6       6       3       8       N
+7       5       3       6       N
+8       9       5       4       N
+9       8       4       2       N
+10      7       4       1       N
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 CLASSIFICAÇÃO NO CAMPEONATO
-Lugar	Piloto	Equipe	Total_de_Pontos
+Lugar   Piloto  Equipe  Total_de_Pontos
 ----------------------------------------------------------
-1	4	2	272
-2	6	3	257
-3	10	5	252
-4	3	2	248
-5	9	5	233
-6	5	3	231
-7	7	4	227
-8	1	1	224
-9	2	1	215
-10	8	4	211
+1       4       2       272
+2       6       3       257
+3       10      5       252
+4       3       2       248
+5       9       5       233
+6       5       3       231
+7       7       4       227
+8       1       1       224
+9       2       1       215
+10      8       4       211
 ----------------------------------------------------------
 
 ----------------------------------------------------------
 CLASSIFICAÇÃO DE CONSTRUTORES
-Lugar	Equipe	Pontos
+Lugar   Equipe  Pontos
 ----------------------------------------------------------
-1	2	520
-2	3	488
-3	5	485
-4	1	439
-5	4	438
+1       2       520
+2       3       488
+3       5       485
+4       1       439
+5       4       438
 ----------------------------------------------------------
 \end{verbatim}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \end{document}
-
