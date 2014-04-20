@@ -5,8 +5,8 @@
  * Daniel Augusto Cortez 2960291
  * 
  * Arquivo: ep1.c
- * Compilação: gcc ep1.c -o ep1 -lpthread
- * Última atualização: 13/04/2014
+ * Compilação: gcc ep1.c -o ep1 -Wall -ansi -pedantic -lpthread
+ * Última atualização: 20/04/2014
  **************************************************************************************************/
 
 #include <stdio.h>
@@ -17,18 +17,11 @@
 #include <time.h> 
 #include <unistd.h>
 
+/* Utilize 1 se desejar informações adicionais de debug durante a execução, ou 0 caso contrário. */
+#define DEBUG 0
+
+/* Utilizado para inicialização das threads. */
 #define SHARED 1 
-
-#define DEBUG 1
-
-/* Velocidade normal dos carros em metros por segundo. */
-#define SPEED 50
-
-/* Velocidade reduzida dos carros em metros por segundo. */
-#define HALF_SPEED 25
-
-/* Velocidade dos carros dentro dos boxes em metros por segundo. */
-#define BOXE_SPEED 25
 
 /* Número de voltas finais em que k% dos carros terão velocidade reduzida. */
 #define FINAL_LAPS 10
@@ -85,9 +78,6 @@ struct pilot
 	int has_stoped;    /* indica se o piloto já fez sua parada nos boxes */
 };
 
-/* Coleção de pilotos da competição. */
-Pilot* pilots;
-
 /* Definição de uma estrutura segmento de pista. */
 struct segment
 {
@@ -103,6 +93,9 @@ typedef struct team {
 	int id;
 	int points;
 } Team;
+
+/* Coleção de pilotos da competição. */
+Pilot* pilots;
 
 /* A pista será representada por um vetor de TRACK_SEGMENTS segmentos. */
 Segment track[TRACK_SEGMENTS];
@@ -138,14 +131,13 @@ pthread_t coordinator;
 /* Conta a ordem de chegada dos pilotos no finalizarem a prova. */
 int order = 0;
 
-/* Define o começo da corrida. */
+/* Define a largada da corrida. */
 int start = 0;
 
 /**************************************************************************************************/
 
 void setup_track();
 void setup_boxes();
-
 int read_input_file(const char* file);
 void create_track_mutexes();
 void create_boxes_mutexes();
@@ -153,23 +145,19 @@ void setup_pilots();
 void choose_reduced_pilots();
 int random_int(int a, int b);
 void setup_start_grid();
-
 void show_pilots();
 void show_track();
 void show_boxes();
 void pilot_tos(Pilot pilot, char* string);
-
 void create_barrier_semaphores();
 void create_coordinator_thread();
 void* barrier_sync(void* argument);
-
 void show_pilots_report(double time);
 void show_pilot_status(Pilot pilot);
 int first_has_completed_lap();
 void show_first_three_pilots_and_update_order();
 Pilot get_next(Pilot first, Pilot second);
 int get_dist(Pilot pilot);
-
 void create_pilots_threads();
 void* pilot_run(void* argument);
 void move_in_track(Pilot pilot);
@@ -179,16 +167,13 @@ void try_to_move(Pilot pilot, Segment current, Segment next);
 void move(Pilot pilot, Segment current, Segment next);
 void update_pilot(Pilot pilot, Segment current, Segment next);
 void exit_track(Pilot pilot);
-
 void join_threads();
-
 void show_race_result();
 int order_cmp(const void* a, const void* b);
 void show_championship_classification();
 int points_cmp(const void* a, const void* b);
 void show_teams_classification();
 int teams_cmp(const void* a, const void* b);
-
 void clean_up();
 
 /**************************************************************************************************/
@@ -322,6 +307,7 @@ void choose_reduced_pilots()
 
 /**************************************************************************************************/
 
+/* Retorna um inteiro aleatório no intervalo fechado [a, b]. */
 int random_int(int a, int b)
 {
 	double r, x, R = RAND_MAX;
@@ -359,7 +345,7 @@ void show_pilots()
 
 	printf(LINE);
 	printf("PILOTOS\n");
-	printf("Id\tEquipe\tPontos\tPosição\tÍndice\tReduz\tVolta_Boxe\n");
+	printf("Piloto\tEquipe\tPontos\tPosição\tÍndice\tReduz\tVolta_Boxe\n");
 	printf(LINE);
 	for (i = 0; i < 2 * m; i++) {
 		p = pilots[i];
@@ -375,7 +361,7 @@ void show_pilots()
 void show_track()
 {
 	int i; 
-	char d, buff1[4], buff2[4];
+	char d, buf1[4], buf2[4];
 	Segment s;
 
 	printf("\n");
@@ -386,9 +372,9 @@ void show_track()
 	for (i = 0; i < TRACK_SEGMENTS; i++) {
 		s = track[i];
 		d = s->is_double ? 'S' : 'N';
-		pilot_tos(s->p1, buff1);		
-		pilot_tos(s->p2, buff2);	
-		printf("%d\t%d\t%c\t%s\t%s\n", s->index, s->position, d, buff1, buff2);
+		pilot_tos(s->p1, buf1);		
+		pilot_tos(s->p2, buf2);	
+		printf("%d\t%d\t%c\t%s\t%s\n", s->index, s->position, d, buf1, buf2);
 	}
 	printf(LINE);
 }
@@ -398,7 +384,7 @@ void show_track()
 void show_boxes()
 {
 	int i;
-	char d, buff1[4], buff2[4];
+	char d, buf1[4], buf2[4];
 	Segment s;
 
 	printf("\n");
@@ -409,9 +395,9 @@ void show_boxes()
 	for (i = 0; i < BOXES_SEGMENTS; i++) {
 		s = boxes[i];
 		d = s->is_double ? 'S' : 'N';
-		pilot_tos(s->p1, buff1);
-		pilot_tos(s->p2, buff2);
-		printf("%d\t%d\t%c\t%s\t%s\n", s->index, s->position, d, buff1, buff2);
+		pilot_tos(s->p1, buf1);
+		pilot_tos(s->p2, buf2);
+		printf("%d\t%d\t%c\t%s\t%s\n", s->index, s->position, d, buf1, buf2);
 	}
 	printf(LINE);
 }
@@ -455,19 +441,18 @@ void create_coordinator_thread()
 
 void* barrier_sync(void* argument)
 {
-	int i, count = 0, num_pilots = 2 * m;
+	int i, all_finished, count = 0, num_pilots = 2 * m;
 	int show_report = (int) (SHOW_REPORT_INTERVAL * 60.0) / (RATE / 1000.0); 	
-	int all_finished, some_finished;
 
 	while (1) {
-		all_finished = 1; some_finished = 0;
+		all_finished = 1;
+
+		/* Espera todos que estão na corrida terminarem a iteração. */
 		for (i = 0; i < num_pilots; i++)
 			if (!pilots[i]->is_finished) {
 				sem_wait(&arrive[i]);				
 				all_finished = 0;								
 			}
-			else
-				some_finished = 1;
 		
 		/* Neste ponto todos os pilotos completaram a iteração 
        e estão esperando para continuar. Podemos imprimir 
@@ -480,6 +465,7 @@ void* barrier_sync(void* argument)
 		if (first_has_completed_lap())		
 			show_first_three_pilots_and_update_order();		
 
+		/* Libera para continuar a próxima iteração. */
 		for (i = 0; i < num_pilots; i++)
 			sem_post(&go_on[i]);	
 		
@@ -601,6 +587,7 @@ Pilot get_next(Pilot first, Pilot second)
 
 /**************************************************************************************************/
 
+/* Retorna a distância total percorrida pelo piloto na corrida. */
 int get_dist(Pilot pilot)
 {
 	return (pilot->lap - 1) * TRACK_SEGMENTS + pilot->segment->index;
@@ -627,7 +614,7 @@ void* pilot_run(void* argument)
 	Pilot pilot = *((Pilot*) argument);
 	int move_turn = 1, boxe_move_turn = 1;
 
-	/* espera ocupada enquanto nao for dada a largada na thread main */
+	/* espera ocupada enquanto não for dada a largada na thread main */
 	while (!start);
 	
 	while (pilot->lap <= n) {
@@ -647,7 +634,7 @@ void* pilot_run(void* argument)
 					move_in_boxes(pilot);
 			}		
 			else {
-				printf("[Piloto %d no pitstop (time = %d, delay = %d)]\n", pilot->id, pilot->pitstop_time, pilot->pitstop_delay);
+				if (DEBUG) printf("[Piloto %d no pitstop (time = %d, delay = %d)]\n", pilot->id, pilot->pitstop_time, pilot->pitstop_delay);
 			}	
 		}			
 		/* barreira de sincronizção */
@@ -794,7 +781,7 @@ void update_pilot(Pilot pilot, Segment current, Segment next)
   	pilot->lap++;
 		if (pilot->in_boxes) { 
 			pilot->in_boxes = 0;
-			printf("[Piloto %d saiu da faixa dos boxes]\n", pilot->id);
+			if (DEBUG) printf("[Piloto %d saiu da faixa dos boxes]\n", pilot->id);
 		}
 		else if (pilot->lap >= 2)
 			pilot->fuel--;    			
@@ -807,7 +794,7 @@ void update_pilot(Pilot pilot, Segment current, Segment next)
 	}
 	else if (next == boxes[0]) {
 		pilot->in_boxes = 1;
-		printf("[Piloto %d entrou na faixa dos boxes]\n", pilot->id);	
+		if (DEBUG) printf("[Piloto %d entrou na faixa dos boxes]\n", pilot->id);	
 	}
 }
 
@@ -826,7 +813,7 @@ void exit_track(Pilot pilot)
 		else if (current->p2 == pilot)
 			current->p2 = NULL;
 		pilot->is_finished = 1;
-		/* printf("[Piloto %d finalizou a corrida.]\n", pilot->id); */
+		if (DEBUG) printf("[Piloto %d finalizou a corrida.]\n", pilot->id);
 	}
 	sem_post(&track_mutex[current_index]);
 }
@@ -919,8 +906,8 @@ int points_cmp(const void* a, const void* b)
 void show_teams_classification()
 {
 	Pilot p;
-	int i, num_pilots = 2 * m;
 	Team* teams;
+	int i, num_pilots = 2 * m;
 	
 	teams = malloc(m * sizeof(Team));
 	for (i = 0; i < m; i++) {
@@ -1015,21 +1002,21 @@ int main(int argc, char** argv)
 		setup_pilots();
 		choose_reduced_pilots();
 		setup_start_grid();
-		show_pilots();		
-		show_track();
-		show_boxes();
+		if (DEBUG) show_pilots();		
+		if (DEBUG) show_track();
+		if (DEBUG) show_boxes();
 	}
 
 	create_barrier_semaphores();
 	create_coordinator_thread();
 	create_pilots_threads();
 
-	printf("\n[Foi dada a largada]\n");
+	if (DEBUG) printf("\n[Foi dada a largada]\n");
 	start = 1;
 
 	join_threads();
 
-	printf("\n[Corrida finalizada]\n");
+	if (DEBUG) printf("\n[Corrida finalizada]\n");
 	
 	show_race_result();
 	show_championship_classification();
